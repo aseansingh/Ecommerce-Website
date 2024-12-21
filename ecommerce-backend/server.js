@@ -4,7 +4,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 
 const userRoutes = require('./routes/userRoutes');
-const productRoutes = require('./routes/productRoutes'); // Ensure this file exists
+const productRoutes = require('./routes/productRoutes');
+const { notFound, errorHandler } = require('./middlewares/errorMiddleware'); // Importing error middleware
 
 dotenv.config();
 
@@ -18,17 +19,22 @@ app.use(cors());
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-}).then(() => console.log('MongoDB connected'))
+})
+    .then(() => console.log('MongoDB connected'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
 app.use('/api/users', userRoutes);
-app.use('/api/products', productRoutes); // Placeholder if the file doesn’t exist
+app.use('/api/products', productRoutes);
 
 // Default route
 app.get('/', (req, res) => {
     res.send('E-commerce backend is running');
 });
+
+// Error handling middleware
+app.use(notFound);
+app.use(errorHandler);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
