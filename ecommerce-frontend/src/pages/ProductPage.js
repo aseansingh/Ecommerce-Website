@@ -1,27 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom';
-import { getProductById } from '../api';
+import { getProductById } from '../api'; // Correctly import the named export
+import { CartContext } from '../context/CartContext';
+import styles from './ProductPage.module.css';
 
 const ProductPage = () => {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
+    const { addToCart } = useContext(CartContext);
 
     useEffect(() => {
-        getProductById(id)
-            .then((data) => setProduct(data))
-            .catch((err) => console.error(err));
+        const fetchProduct = async () => {
+            try {
+                const data = await getProductById(id); // Use the imported function
+                setProduct(data);
+            } catch (error) {
+                console.error('Error fetching product:', error);
+            }
+        };
+
+        fetchProduct();
     }, [id]);
 
-    if (!product) {
-        return <div>Loading...</div>;
-    }
+    if (!product) return <p>Loading...</p>;
 
     return (
-        <div>
-            <h1>{product.name}</h1>
-            <p>{product.description}</p>
-            <p>Price: ${product.price}</p>
-            <img src={product.imageUrl} alt={product.name} />
+        <div className={styles.container}>
+            <div className={styles.productDetails}>
+                <h1 className={styles.productName}>{product.name}</h1>
+                <p className={styles.productDescription}>{product.description}</p>
+                <p className={styles.productPrice}>Price: ${product.price}</p>
+                <p className={styles.productStock}>Stock: {product.stock}</p>
+                <button onClick={() => addToCart(product)}>Add to Cart</button>
+            </div>
         </div>
     );
 };

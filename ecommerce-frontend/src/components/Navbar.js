@@ -1,41 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import styles from './Navbar.module.css'; // Import the CSS module
 
 const Navbar = () => {
     return (
-        <nav style={styles.navbar}>
-            <h1 style={styles.logo}>E-Commerce</h1>
-            <div style={styles.links}>
-                <Link to="/" style={styles.link}>Home</Link>
-                <Link to="/login" style={styles.link}>Login</Link>
-                <Link to="/register" style={styles.link}>Register</Link>
+        <nav className={styles.navbar}>
+            <h1 className={styles.logo}>E-Commerce</h1>
+            <div className={styles.links}>
+                <Link to="/" className={styles.link}>Home</Link>
+                <Link to="/cart" className={styles.link}>Cart</Link> {/* Added Cart link */}
+                <Link to="/login" className={styles.link}>Login</Link>
+                <Link to="/register" className={styles.link}>Register</Link>
             </div>
         </nav>
     );
-};
-
-const styles = {
-    navbar: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '10px 20px',
-        backgroundColor: '#282c34',
-        color: 'white',
-    },
-    logo: {
-        fontSize: '24px',
-        fontWeight: 'bold',
-    },
-    links: {
-        display: 'flex',
-        gap: '15px',
-    },
-    link: {
-        color: 'white',
-        textDecoration: 'none',
-        fontSize: '16px',
-    },
 };
 
 export default Navbar;
