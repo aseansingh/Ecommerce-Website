@@ -44,11 +44,21 @@ userSchema.pre('save', async function(next) {
 
 // Match user entered password to hashed password in database
 userSchema.methods.matchPassword = async function(enteredPassword) {
-    if (!enteredPassword || !this.password) {
-        console.error('Missing arguments for password comparison');
-        throw new Error('Missing password data for comparison');
+    try {
+        // Debug log for entered and hashed passwords
+        console.log('Entered password:', enteredPassword);
+        console.log('Hashed password from DB:', this.password);
+
+        const isMatch = await bcrypt.compare(enteredPassword, this.password);
+
+        // Debug log for match status
+        console.log('Password match status:', isMatch);
+
+        return isMatch;
+    } catch (err) {
+        console.error('Password comparison error:', err);
+        throw new Error('Error comparing passwords');
     }
-    return await bcrypt.compare(enteredPassword, this.password);
 };
 
 module.exports = mongoose.model('User', userSchema);
