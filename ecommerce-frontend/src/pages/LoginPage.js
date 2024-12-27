@@ -1,38 +1,26 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Make sure axios is installed
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-// You might want to move this to your api.js file
-const API_BASE_URL = 'http://localhost:5001/api'; // Adjust this to match your backend URL
-
-const post = async (endpoint, data) => {
-    try {
-        const response = await axios.post(`${API_BASE_URL}${endpoint}`, data, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        return response.data;
-    } catch (error) {
-        if (error.response) {
-            throw error.response.data;
-        }
-        throw error;
-    }
-};
+const API_BASE_URL = 'http://localhost:5001/api';
 
 const LoginPage = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
         password: '',
     });
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
+        const { name, value } = e.target;
+        setFormData((prevState) => ({
+            ...prevState,
+            [name]: value,
+        }));
+        if (error) setError(null);
     };
 
     const handleLogin = async (e) => {
@@ -41,22 +29,31 @@ const LoginPage = () => {
         setIsLoading(true);
 
         try {
-            const response = await post('/users/login', formData);
+            const response = await axios.post(`${API_BASE_URL}/users/login`, formData, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            });
 
-            if (response.token) {
-                // Store the token in localStorage
-                localStorage.setItem('userToken', response.token);
+            const { success, token, message } = response.data;
 
-                // You might want to store user data as well if it's returned
-                if (response.user) {
-                    localStorage.setItem('userData', JSON.stringify(response.user));
+            if (success && token) {
+                localStorage.setItem('userToken', token);
+
+                // Optional: Store user data if returned by the server
+                if (response.data.user) {
+                    localStorage.setItem('userRole', response.data.user.role);
+                    localStorage.setItem('userName', response.data.user.name);
                 }
 
-                // Redirect to dashboard or home page
-                window.location.href = '/dashboard'; // Or use React Router navigation
+                navigate('/dashboard');
+            } else {
+                throw new Error(message || 'Login failed. Please try again.');
             }
         } catch (err) {
             setError(
+                err.response?.data?.message ||
                 err.message ||
                 'Unable to login. Please check your credentials and try again.'
             );
@@ -68,11 +65,9 @@ const LoginPage = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Sign in to your account
-                    </h2>
-                </div>
+                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Sign in to your account
+                </h2>
                 <form className="mt-8 space-y-6" onSubmit={handleLogin}>
                     <div className="rounded-md shadow-sm -space-y-px">
                         <div>
@@ -84,50 +79,43 @@ const LoginPage = () => {
                                 name="email"
                                 type="email"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                 placeholder="Email address"
                                 value={formData.email}
                                 onChange={handleChange}
                             />
                         </div>
-                        <div>
+                        <div className="relative">
                             <label htmlFor="password" className="sr-only">
                                 Password
                             </label>
                             <input
                                 id="password"
                                 name="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                 placeholder="Password"
                                 value={formData.password}
                                 onChange={handleChange}
                             />
+                            <button
+                                type="button"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                <span className="text-gray-500">{showPassword ? 'Hide' : 'Show'}</span>
+                            </button>
                         </div>
                     </div>
-
-                    {error && (
-                        <div className="rounded-md bg-red-50 p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">
-                                        {error}
-                                    </h3>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            {isLoading ? 'Signing in...' : 'Sign in'}
-                        </button>
-                    </div>
+                    {error && <div className="text-red-500 text-sm">{error}</div>}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    >
+                        {isLoading ? 'Signing in...' : 'Sign in'}
+                    </button>
                 </form>
             </div>
         </div>
