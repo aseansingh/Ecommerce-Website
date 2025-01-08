@@ -26,3 +26,16 @@
 .link:hover {
     text-decoration: underline;
 }
+
+.signOut {
+    background-color: white;
+    color: #007bff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.signOut:hover {
+    background-color: #f0f0f0;
+}
